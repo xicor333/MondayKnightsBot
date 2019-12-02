@@ -90,6 +90,15 @@ class DBManager{
         callback(err,rows)
     });
   }
+  getAllPlayers(callback){
+    this.database.all('SELECT player_id,player_name FROM players',(err,rows)=>{
+      if(err){
+        console.log("Failed to get players: "+err);
+      }
+      if(callback)
+        callback(err,rows)
+    })
+  }
   addAnnouncement(text,callback){
     this.database.run('INSERT INTO announcements (text) VALUES(?)',[text],(err)=>{
       if(err){

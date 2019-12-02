@@ -142,23 +142,21 @@ class MessageManager{
     let isOfficer = member.roles.find(r => r.name.includes("Officer"));
 
     if(!(isOfficer)) return;
-    if(!checkArg(msg,1)) return;
 
+    let message=stripArg(msg,0);
+    if(message.length==0)
+      return msg.channel.send("Message to tag must not be empty.");
 
-    let nameList=getArg(msg,1).split(",");
-    this.dbManager.getPlayersByName(nameList,(err,rows)=>{
+    this.dbManager.getAllPlayers((err,rows)=>{
       if(err)
         return;
-      let messageStr="Tagging: ";
       rows.forEach((row)=>{
         let user=this.guild.members.get(row.player_id);
-        messageStr+=user.toString();
+        let regex=new RegExp("\\b"+row.player_name+"\\b","gi");
+        message=message.replace(regex,user.toString());
       })
-      if(rows.length < nameList.length)
-      {
-        messageStr+=" (Some members missing. Please ?register) @here";
-      }
-      this.announcementChannel.send(messageStr);
+      msg.channel.send(message);
+      msg.delete().then().catch(console.error);
     });
 
 
