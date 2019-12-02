@@ -133,7 +133,7 @@ class MessageManager{
       {
         return msg.channel.send("Failed to get an announcement message, please add one with ?addAnnouncement");
       }
-      this.announcementChannel.send("@everyone "+row.text.replace("%day%",daysOfWeek[dayOfWeek].toUpperCase())+" https://forms.gle/iBrpCWBNsdmm3PNK7");
+      this.announcementChannel.send("@everyone "+row.text.replace(/%day%/gi,daysOfWeek[dayOfWeek].toUpperCase())+" https://forms.gle/iBrpCWBNsdmm3PNK7");
     })
 
   }
@@ -168,7 +168,7 @@ class MessageManager{
     let isOfficer = member.roles.find(r => r.name.includes("Officer"));
 
     if(!(isOfficer)) return;
-    if(!msg.content.includes("%day%"))
+    if(!msg.content.match(/%day%/gi))
       return msg.channel.send("Message must contain '%day%' somewhere");
     let announcement=stripArg(msg,0);
     console.log(announcement)
