@@ -4,7 +4,7 @@ const Guild_ID = process.env.GUILD_ID;
 
 const Prefix = '?';
 const daysOfWeek=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-const baseCommands=['help','register','interested','uninterested',"post","tag","addannouncement"];
+const baseCommands=['help','register','interested','uninterested',"post","tag","addannouncement","clearannouncements"];
 const commands=baseCommands.map(function(command){return Prefix.concat(command)});
 
 function checkArg(msg,argToCheck)
@@ -45,7 +45,8 @@ class MessageManager{
       this.command_uninterested.bind(this),
       this.command_post.bind(this),
       this.command_tag.bind(this),
-      this.command_addAnnouncement.bind(this)
+      this.command_addAnnouncement.bind(this),
+      this.command_clearAnnouncements.bind(this)
     ]
   }
   initialize(discordClient){
@@ -61,6 +62,11 @@ class MessageManager{
     console.log("Message Manager Initialized");
 
     this.prospect_role=this.guild.roles.find(r => r.name == "Prospects");
+  }
+  botAnnouncement(announcementString)
+  {
+    if(!announcementString) return;
+    this.announcementChannel.send(announcementString);
   }
   processMessage(msg)
   {
@@ -176,6 +182,23 @@ class MessageManager{
         return msg.channel.send("Failed to add announcement");
       }
       return msg.channel.send("Announcement added");
+    })
+  }
+  command_clearAnnouncements(msg,author){
+    let member=this.guild.members.get(author.id);
+    let isOfficer = member.roles.find(r => r.name.includes("Officer"));
+
+    if(!(isOfficer))
+    {
+        return msg.channel.send("Officer role is required to clear announcements");
+    }
+
+    this.dbManager.clearAnnouncements((err)=>{
+      if(err)
+      {
+        return msg.channel.send("Failed to clear announcements");
+      }
+      return msg.channel.send("Announcements cleared");
     })
   }
 }

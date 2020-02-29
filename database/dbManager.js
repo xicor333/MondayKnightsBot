@@ -118,5 +118,15 @@ class DBManager{
         callback(err,row);
     })
   }
+  clearAnnouncements(callback){
+    this.database.run('DELETE FROM announcements',(err)=>{
+      if(err)
+      {
+        console.log("Failed to clear announcements:"+err);
+      }
+      if(callback)
+      callback(err);
+    })
+  }
 }
 module.exports=DBManager;
