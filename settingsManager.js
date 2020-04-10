@@ -33,7 +33,7 @@ class SettingsManager{
     }
     if(versionNo == 2)
     {
-      return "* 'addAnnouncement' command no longer requires %day% tag"+
+      return "* 'addAnnouncement' command no longer requires %day% tag\n"+
               "* 'help' now gives explanations of the specific commands"
     }
   }
