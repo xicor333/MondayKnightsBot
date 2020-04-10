@@ -4,11 +4,11 @@
   "description": "Bot for monday knights guild",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^11.5.1",
+    "discord.js": "^11.6.4",
     "heartbeats": "^5.0.1",
     "log-timestamp": "^0.3.0",
     "node-schedule": "^1.3.2",
-    "sqlite3": "^4.1.0",
+    "sqlite3": "^4.1.1",
     "touch": "^3.1.0"
   },
   "devDependencies": {},
