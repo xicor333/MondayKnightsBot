@@ -86,8 +86,34 @@ class MessageManager{
 
     return this.commandMap[commandIndex].call(this,msg,msg.author);
   }
+  helpMessages(cmdIndex){
+    if(cmdIndex<0)
+      return "The following commands are available. Use 'help [command]' for detailed description.\n"+commands.join(",");
+    switch(cmdIndex)
+    {
+      case 0: return "Help - Basic list of commands.\nUsage: 'help [command]''";
+      case 1: return "Register - links a discord user with a player name.\nUsage: 'register [player name]''";
+      case 2: return "Interested - gives the user the prospect role.\nUsage: 'interested'";
+      case 3: return "Uninterested - removes the prospect role from the user.\nUsage: 'uninterested'"
+      case 4: return "Post - Posts a random announcement.\nUsage: 'post [day]'"
+      case 5: return "Tag - Tags all players in the message by in game name (must be registered).\nUsage: 'tag [message content]'"
+      case 6: return "AddAnnouncement - Adds an announcement to the random list.\n"+
+                      "Adding in %day% will automatically be replaced with the day of the week when the announcement is made"+
+                      "Tagging is not necessary and will automatically be prepended.\nUsage: 'addAnnouncement [message content]'"
+      case 7: return "ClearAnnouncements - Clears all announcements in the list.\nUsage: 'clearAnnouncements'"
+    }
+
+
+  }
   command_help(msg,author){
-    msg.channel.send("The following commands are available: "+commands.join(","));
+    let helpArg = getArg(msg,1);
+    let commandIndex = -1;
+
+    if(helpArg)
+      commandIndex=baseCommands.indexOf(helpArg.toLowerCase());
+    
+    let message = this.helpMessages(commandIndex);
+    msg.channel.send(message);
   }
   command_register(msg,author){
     this.dbManager.getPlayerById(author.id,(err,row)=>{
@@ -139,7 +165,10 @@ class MessageManager{
       {
         return msg.channel.send("Failed to get an announcement message, please add one with ?addAnnouncement");
       }
-      this.announcementChannel.send("@everyone "+row.text.replace(/%day%/gi,daysOfWeek[dayOfWeek].toUpperCase())+" https://forms.gle/iBrpCWBNsdmm3PNK7");
+      let prepend = "@everyone "
+      if(row.text.match(/@everyone/gi))
+        prepend="";
+      this.announcementChannel.send(prepend+row.text.replace(/%day%/gi,daysOfWeek[dayOfWeek].toUpperCase()));
     })
 
   }
@@ -172,8 +201,8 @@ class MessageManager{
     let isOfficer = member.roles.find(r => r.name.includes("Officer"));
 
     if(!(isOfficer)) return;
-    if(!msg.content.match(/%day%/gi))
-      return msg.channel.send("Message must contain '%day%' somewhere");
+    // if(!msg.content.match(/%day%/gi))
+      // return msg.channel.send("Message must contain '%day%' somewhere");
     let announcement=stripArg(msg,0);
     console.log(announcement)
     this.dbManager.addAnnouncement(announcement,(err)=>{

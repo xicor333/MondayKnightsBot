@@ -1,7 +1,7 @@
 const FS = require('fs');
 const Touch = require('touch');
 const INI = require('ini');
-const currentVersion=1;
+const currentVersion=2;
 class SettingsManager{
   constructor(){
     Touch.sync('./config.ini');
@@ -30,6 +30,11 @@ class SettingsManager{
     if(versionNo == 1)
     {
       return "* Added 'clearAnnouncements' command\n";
+    }
+    if(versionNo == 2)
+    {
+      return "* 'addAnnouncement' command no longer requires %day% tag"+
+              "* 'help' now gives explanations of the specific commands"
     }
   }
 }
