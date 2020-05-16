@@ -111,41 +111,47 @@ class MessageManager{
 
     if(helpArg)
       commandIndex=baseCommands.indexOf(helpArg.toLowerCase());
-    
+
     let message = this.helpMessages(commandIndex);
     msg.channel.send(message);
   }
   command_register(msg,author){
-    this.dbManager.getPlayerById(author.id,(err,row)=>{
-      if(err)
-        return;
-      let dbUser=row;
-      if(dbUser)
-      {
-        return msg.channel.send("You are already registered as "+dbUser.player_name);
-      }
-      if(!checkArg(msg,1))
-        return;
-      let player_name=getArg(msg,1);
-      this.dbManager.addPlayer(author.id,player_name);
-      return msg.channel.send("You have successfully been registered as "+player_name)
-    });
 
+    this.dbManager.getPlayerById(author.id).then(dbUser=>{
+      if(dbUser)
+        return Promise.reject("You are already registered as "+dbUser.player_name);
+      //check arg already sends out an error message on failure
+      if(!checkArg(msg,1))
+        return Promise.reject(null);
+
+      let player_name=getArg(msg,1);
+      return this.dbManager.addPlayer(author.id,player_name);
+
+    }).then(player_name=>{
+      return msg.channel.send("You have successfully been registered as "+player_name);
+    }).catch(message=>{
+      if(message)
+        msg.channel.send("Failed to register: "+message);
+    });
   }
   command_interested(msg,author){
     let member=this.guild.members.get(author.id);
 
     member.addRole(this.prospect_role).then(()=>{
       msg.channel.send('You now have the prospect role')
-    }).catch(console.error);
+    }).catch(err =>{
+      msg.channel.send("Failed to add role:"+err);
+    });
 
   }
   command_uninterested(msg,author){
     let member=this.guild.members.get(author.id);
 
     member.removeRole(this.prospect_role).then(()=>{
-      msg.channel.send('You no longer have the prospect role')
-    }).catch(console.error);
+      msg.channel.send('You no longer have the prospect role');
+    }).catch(err =>{
+      msg.channel.send("Failed to remove role");
+    });
   }
   command_post(msg,author){
     let member=this.guild.members.get(author.id);
@@ -160,16 +166,16 @@ class MessageManager{
       msg.channel.send("invalid day of the week. Options are ["+daysOfWeek.join(',')+"]");
       return;
     }
-    this.dbManager.getAnnouncement((err,row)=>{
-      if(err || !row)
-      {
-        return msg.channel.send("Failed to get an announcement message, please add one with ?addAnnouncement");
-      }
+    this.dbManager.getAnnouncement().then(announcement=>{
+      if(!announcement)
+        return Promise.reject("Please add one with ?addAnnouncement");
       let prepend = "@everyone "
-      if(row.text.match(/@everyone/gi))
+      if(announcement.text.match(/@everyone/gi))
         prepend="";
-      this.announcementChannel.send(prepend+row.text.replace(/%day%/gi,daysOfWeek[dayOfWeek].toUpperCase()));
-    })
+      return this.announcementChannel.send(prepend+announcement.text.replace(/%day%/gi,daysOfWeek[dayOfWeek].toUpperCase()));
+    }).catch(err=>{
+      return msg.channel.send("Failed to get an announcement message: "+err);
+    });
 
   }
   command_tag(msg,author){
@@ -182,17 +188,19 @@ class MessageManager{
     if(message.length==0)
       return msg.channel.send("Message to tag must not be empty.");
 
-    this.dbManager.getAllPlayers((err,rows)=>{
-      if(err)
-        return;
-      rows.forEach((row)=>{
-        let user=this.guild.members.get(row.player_id);
-        let regex=new RegExp("\\b"+row.player_name+"\\b","gi");
-        message=message.replace(regex,user.toString());
-      })
-      msg.channel.send(message);
-      msg.delete().then().catch(console.error);
-    });
+      this.dbManager.getAllPlayers().then(players =>{
+        for( const player of players)
+        {
+          let user=this.guild.members.get(player.player_id);
+          let regex=new RegExp("\\b"+player.player_name+"\\b","gi");
+          message=message.replace(regex,user.toString());
+        }
+        const p=msg.channel.send(message);
+        msg.delete().then().catch(console.error);
+        return p;
+      }).catch(err=>{
+        return msg.channel.send("Failed to tag users: "+err);
+      });
 
 
   }
@@ -204,14 +212,12 @@ class MessageManager{
     // if(!msg.content.match(/%day%/gi))
       // return msg.channel.send("Message must contain '%day%' somewhere");
     let announcement=stripArg(msg,0);
-    console.log(announcement)
-    this.dbManager.addAnnouncement(announcement,(err)=>{
-      if(err)
-      {
-        return msg.channel.send("Failed to add announcement");
-      }
+
+    this.dbManager.addAnnouncement(announcement).then(message =>{
       return msg.channel.send("Announcement added");
-    })
+    }).catch(err =>{
+      return msg.channel.send("Failed to add announcement");
+    });
   }
   command_clearAnnouncements(msg,author){
     let member=this.guild.members.get(author.id);
@@ -221,14 +227,11 @@ class MessageManager{
     {
         return msg.channel.send("Officer role is required to clear announcements");
     }
-
-    this.dbManager.clearAnnouncements((err)=>{
-      if(err)
-      {
-        return msg.channel.send("Failed to clear announcements");
-      }
+    this.dbManager.clearAnnouncements().then(()=>{
       return msg.channel.send("Announcements cleared");
-    })
+    }).catch(err =>{
+      return msg.channel.send("Failed to clear announcements");
+    });
   }
 }
 module.exports=MessageManager;
