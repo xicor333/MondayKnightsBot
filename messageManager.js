@@ -158,14 +158,11 @@ class MessageManager{
     let isOfficer = member.roles.find(r => r.name.includes("Officer"));
 
     if(!(isOfficer)) return;
-    if(!checkArg(msg,1)) return;
+    if(!checkArg(msg,0)) return;
 
-    let dayOfWeek=daysOfWeek.indexOf(getArg(msg,1).toLowerCase());
-    if(dayOfWeek<0)
-    {
-      msg.channel.send("invalid day of the week. Options are ["+daysOfWeek.join(',')+"]");
-      return;
-    }
+    let date = new Date();
+    let dayOfWeek=date.getDay();
+
     this.dbManager.getAnnouncement().then(announcement=>{
       if(!announcement)
         return Promise.reject("Please add one with ?addAnnouncement");

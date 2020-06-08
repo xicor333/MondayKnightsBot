@@ -1,7 +1,7 @@
 const FS = require('fs');
 const Touch = require('touch');
 const INI = require('ini');
-const currentVersion=2;
+const currentVersion=3;
 class SettingsManager{
   constructor(){
     Touch.sync('./config.ini');
@@ -35,6 +35,10 @@ class SettingsManager{
     {
       return "* 'addAnnouncement' command no longer requires %day% tag\n"+
               "* 'help' now gives explanations of the specific commands"
+    }
+    if(versionNo ==3)
+    {
+      return "* 'post' command no longer requires a day to be specified and will just use today's day"
     }
   }
 }
